@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gray-50;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply px-6 py-3 bg-primary-600 text-white rounded-lg font-semibold 
+           hover:bg-primary-700 transition-colors duration-200 
+           disabled:bg-gray-400 disabled:cursor-not-allowed;
+  }
+
+  .input-area {
+    @apply w-full min-h-[150px] p-4 border-2 border-gray-200 rounded-lg 
+           focus:border-primary-500 focus:ring-2 focus:ring-primary-200 
+           transition-all duration-200;
+  }
+
+  .card {
+    @apply bg-white rounded-lg shadow-md p-6 animate-fade-in;
+  }
+}

@@ -1,0 +1,88 @@
+.resume-display {
+  margin-top: 30px;
+  background-color: white;
+  padding: 40px;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.resume-content {
+  line-height: 1.8;
+  color: #333;
+}
+
+h2, h3, h4, h5 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.experience-item, .education-item {
+  margin-bottom: 15px;
+}
+
+.experience-item h5, .education-item h5 {
+  margin-bottom: 5px;
+}
+
+.experience-item p, .education-item p {
+  margin: 0;
+  color: #666;
+}
+
+.resume-item {
+  margin-bottom: 25px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.resume-item:last-child {
+  border-bottom: none;
+}
+
+.resume-item h4 {
+  color: #1976d2;
+  font-size: 1.2em;
+  margin-bottom: 15px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.resume-item ul {
+  margin: 10px 0;
+  padding-left: 20px;
+}
+
+.resume-item ul li {
+  margin-bottom: 8px;
+  position: relative;
+}
+
+.resume-item ul li::before {
+  content: '•';
+  color: #1976d2;
+  font-weight: bold;
+  position: absolute;
+  left: -15px;
+}
+
+.resume-item span {
+  display: inline-block;
+  line-height: 1.6;
+}
+
+@media print {
+  .resume-display {
+    box-shadow: none;
+    padding: 20px;
+  }
+  
+  .resume-item {
+    page-break-inside: avoid;
+  }
+}
