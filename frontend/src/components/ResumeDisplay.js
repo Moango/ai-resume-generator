@@ -1,7 +1,9 @@
 import React from 'react';
+import ReactMarkdown from 'react-markdown';
+import { sectionNames } from '../constants/resumeSections';
 import './ResumeDisplay.css';
 
-function ResumeDisplay({ resume, loading }) {
+function ResumeDisplay({ resume, loading, onSectionEdit }) {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px] bg-white/50 backdrop-blur-sm rounded-lg p-8">
@@ -21,63 +23,33 @@ function ResumeDisplay({ resume, loading }) {
     );
   }
 
-  let resumeData;
-  try {
-    resumeData = JSON.parse(resume);
-  } catch (error) {
-    console.error('Error parsing resume JSON:', error);
-    return (
-      <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg">
-        <p className="text-red-700">简历数据格式错误</p>
-      </div>
-    );
-  }
-
-  const renderValue = (value) => {
-    if (Array.isArray(value)) {
-      return (
-        <ul className="list-disc list-inside space-y-1">
-          {value.map((item, index) => (
-            <li key={index} className="text-gray-600">
-              {typeof item === 'object' ? renderObject(item) : item}
-            </li>
-          ))}
-        </ul>
-      );
-    } else if (typeof value === 'object' && value !== null) {
-      return renderObject(value);
-    } else {
-      return <span className="text-gray-600">{value}</span>;
-    }
-  };
-
-  const renderObject = (obj) => {
-    if (!obj) return null;
-    
-    return (
-      <div className="space-y-2">
-        {Object.entries(obj).map(([key, value]) => (
-          <div key={key} className="space-y-1">
-            <div className="font-medium text-gray-700 capitalize">
-              {key.replace(/_/g, ' ')}
-            </div>
-            <div className="ml-4">{renderValue(value)}</div>
-          </div>
-        ))}
-      </div>
-    );
-  };
+  // 将简历内容分成不同的部分
+  const sections = resume.split(/(?=^# |\n## )/m).filter(Boolean);
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-8 space-y-6">
-      {Object.entries(resumeData).map(([section, content]) => (
-        <div key={section} className="border-b border-gray-200 pb-6 last:border-0">
-          <h3 className="text-xl font-semibold text-gray-800 mb-4 capitalize">
-            {section.replace(/_/g, ' ')}
-          </h3>
-          {renderValue(content)}
-        </div>
-      ))}
+    <div className="resume-container prose prose-sm max-w-none">
+      {sections.map((section, index) => {
+        const sectionTitle = section.match(/^#+ (.*)/m)?.[1];
+        const sectionKey = Object.entries(sectionNames).find(
+          ([_, value]) => value === sectionTitle
+        )?.[0];
+
+        return (
+          <div key={index} className="resume-section relative group">
+            <ReactMarkdown>{section}</ReactMarkdown>
+            {sectionKey && (
+              <button
+                onClick={() => onSectionEdit(sectionKey, section)}
+                className="absolute right-0 top-0 opacity-0 group-hover:opacity-100 
+                         transition-opacity duration-200 bg-blue-500 text-white 
+                         px-2 py-1 rounded text-sm"
+              >
+                修改此部分
+              </button>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }

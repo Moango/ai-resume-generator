@@ -22,6 +22,6 @@
   }
 
   .card {
-    @apply bg-white rounded-lg shadow-md p-6 animate-fade-in;
+    @apply bg-white rounded-lg shadow-md p-6;
   }
 }

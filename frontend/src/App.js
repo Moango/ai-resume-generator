@@ -1,12 +1,17 @@
 import React, { useState } from 'react';
 import InputForm from './components/InputForm';
 import ResumeDisplay from './components/ResumeDisplay';
+import Modal from './components/Modal';
+import EditSectionForm from './components/EditSectionForm';
+import { sectionNames } from './constants/resumeSections';
 import axios from 'axios';
 
 function App() {
   const [resume, setResume] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [editingSection, setEditingSection] = useState(null);
+  const [editingSectionValue, setEditingSectionValue] = useState(null);
 
   const handleSubmit = async (formData) => {
     setIsLoading(true);
@@ -26,6 +31,38 @@ function App() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSectionEdit = (section, currentValue) => {
+    setEditingSection(section);
+    setEditingSectionValue(currentValue);
+  };
+
+  const handleEditSubmit = async (modificationRequest) => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const response = await axios.post('/api/v1/modify_resume', {
+        current_resume: resume,
+        section: editingSection,
+        modification_request: modificationRequest
+      });
+      
+      setResume(response.data.resume);
+      setEditingSection(null);
+      setEditingSectionValue(null);
+    } catch (error) {
+      console.error('Error modifying resume:', error);
+      setError(`修改简历时发生错误: ${error.message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleEditCancel = () => {
+    setEditingSection(null);
+    setEditingSectionValue(null);
   };
 
   return (
@@ -52,7 +89,11 @@ function App() {
                 <p className="text-red-700">{error}</p>
               </div>
             ) : (
-              <ResumeDisplay resume={resume} loading={isLoading} />
+              <ResumeDisplay 
+                resume={resume} 
+                loading={isLoading} 
+                onSectionEdit={handleSectionEdit}
+              />
             )}
           </div>
         </div>
@@ -63,6 +104,19 @@ function App() {
           定制简历生成系统 ©{new Date().getFullYear()}
         </div>
       </footer>
+
+      <Modal
+        isOpen={!!editingSection}
+        onClose={handleEditCancel}
+        title={`修改${editingSection ? sectionNames[editingSection] : ''}`}
+      >
+        <EditSectionForm
+          section={editingSection}
+          currentValue={editingSectionValue}
+          onSubmit={handleEditSubmit}
+          onCancel={handleEditCancel}
+        />
+      </Modal>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
-from app.models.resume import ResumeInput, ResumeOutput
-from app.services.openai_service import generate_resume
+from app.models.resume import ResumeInput, ResumeOutput, ResumeModificationInput
+from app.services.openai_service import generate_resume, modify_resume_section
 import logging
 
 router = APIRouter()
@@ -11,11 +11,27 @@ async def create_resume(input: ResumeInput):
     logger.info(f"Received input: {input}")
     try:
         resume = await generate_resume(input.personal_info, input.job_description)
-        logger.info(f"Generated resume: {resume}")
         return ResumeOutput(resume=resume)
     except ValueError as ve:
         logger.error(f"ValueError: {ve}")
         raise HTTPException(status_code=400, detail=str(ve))
     except Exception as e:
         logger.error(f"Unexpected error: {e}")
-        raise HTTPException(status_code=500, detail="An error occurred while generating the resume")
+        raise HTTPException(status_code=500, detail="生成简历时发生错误")
+
+@router.post("/modify_resume", response_model=ResumeOutput)
+async def modify_resume(input: ResumeModificationInput):
+    logger.info(f"Received modification request: {input}")
+    try:
+        modified_resume = await modify_resume_section(
+            input.current_resume,
+            input.section,
+            input.modification_request
+        )
+        return ResumeOutput(resume=modified_resume)
+    except ValueError as ve:
+        logger.error(f"ValueError: {ve}")
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}")
+        raise HTTPException(status_code=500, detail="修改简历时发生错误")
