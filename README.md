@@ -11,7 +11,7 @@
 
 2. 简历生成
    - 使用OpenAI API处理用户输入并生成定制简历
-   - 输出格式为JSON
+   - 输出格式为Markdown
    - 支持动态字段和灵活的数据结构
 
 3. 用户界面
@@ -25,16 +25,12 @@
 ## 技术栈
 - 前端：
   - React 18
-  - Tailwind CSS 用于样式设计
-  - Axios 用于API请求
+  - Tailwind CSS 
+  - Axios 
 - 后端：
   - Python with FastAPI
   - OpenAI API
-  - Pydantic 用于数据验证
-- 开发工具：
-  - Git 用于版本控制
-  - pytest 用于后端测试
-  - React Testing Library 用于前端测试
+  - Pydantic 
 
 ## 项目架构
 
@@ -153,7 +149,8 @@
    - 异常追踪支持
 
 下一步计划:
-1. 添加简历模板系统
-2. 实现多语言支持
-3. 优化响应速度
-4. 添加更多单元测试
+1. 优化提示工程      
+2. 添加简历模板系统
+3. 实现多语言支持
+4. 优化响应速度
+
