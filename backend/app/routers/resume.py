@@ -10,7 +10,12 @@ logger = logging.getLogger(__name__)
 async def create_resume(input: ResumeInput):
     logger.info(f"Received input: {input}")
     try:
-        resume = await generate_resume(input.personal_info, input.job_description)
+        # 传入position_name参数
+        resume = await generate_resume(
+            input.personal_info, 
+            input.job_description,
+            input.position_name
+        )
         return ResumeOutput(resume=resume)
     except ValueError as ve:
         logger.error(f"ValueError: {ve}")

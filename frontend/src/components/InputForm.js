@@ -28,12 +28,30 @@ function InputForm({ onSubmit, isLoading }) {
     const formData = {
       personal_info: e.target.personalInfo.value,
       job_description: e.target.jobDescription.value,
+      position_name: e.target.positionName.value,
     };
     onSubmit(formData);
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      <div>
+        <label 
+          htmlFor="positionName" 
+          className="block text-lg font-medium text-gray-700 mb-2"
+        >
+          目标职位
+        </label>
+        <input
+          type="text"
+          id="positionName"
+          name="positionName"
+          className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/50 backdrop-blur-sm transition duration-200"
+          placeholder="请输入目标职位名称"
+          required
+        />
+      </div>
+
       <div>
         <label 
           htmlFor="personalInfo" 

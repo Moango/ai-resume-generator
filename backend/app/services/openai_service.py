@@ -8,8 +8,9 @@ from app.templates.resume.system_prompts import (
     JD_ANALYSIS_PROMPT,
     PERSONAL_INFO_ANALYSIS_PROMPT,
     SECTION_GENERATION_PROMPTS,
+    RESUME_MODIFICATION_PROMPT
 )
-from app.templates.resume.section_templates import RESUME_STRUCTURE
+from app.templates.resume.section_templates import RESUME_STRUCTURE  # 修复导入
 
 logger = logging.getLogger(__name__)
 load_dotenv()
@@ -27,7 +28,7 @@ async def analyze_job_description(job_description: str) -> dict:
                 {"role": "user", "content": job_description},
             ],
             temperature=0.7,
-            max_tokens=1000,
+            max_tokens=4096,
             response_format={"type": "json_object"},  # 指定返回JSON格式
         )
 
@@ -54,7 +55,7 @@ async def analyze_personal_info(personal_info: str) -> dict:
                 {"role": "user", "content": personal_info},
             ],
             temperature=0.7,
-            max_tokens=1000,
+            max_tokens=4096,
             response_format={"type": "json_object"},  # 指定返回JSON格式
         )
 
@@ -102,11 +103,10 @@ async def generate_section(
 2. 技能描述：
    - 结合具体项目场景
    - 说明解决的业务问题
-   - 描述技术选型理由
    - 提供性能和可用性数据
 
 3. 技能评级：
-   - 避免使用主观评���
+   - 避免使用主观评
    - 用项目经验说明熟练程度
    - 强调解决复杂问题的能力
    - 突出技术深度和广度""",
@@ -115,7 +115,6 @@ async def generate_section(
 1. 项目背景：
    - 业务场景和价值
    - 团队规模和角色
-   - 技术选型理由
    - 项目难点和挑战
 
 2. 技术实现：
@@ -155,7 +154,7 @@ async def generate_section(
                 {"role": "user", "content": prompt},
             ],
             temperature=0.7,
-            max_tokens=1000,
+            max_tokens=4096,
         )
 
         return completion.choices[0].message.content.strip()
@@ -164,7 +163,7 @@ async def generate_section(
         raise ValueError(f"生成{section}失败: {str(e)}")
 
 
-async def generate_resume(personal_info: str, job_description: str) -> str:
+async def generate_resume(personal_info: str, job_description: str, position_name: str) -> str:
     """分步骤生成简历"""
     try:
         # 并行执行分析任务
@@ -173,6 +172,13 @@ async def generate_resume(personal_info: str, job_description: str) -> str:
             analyze_personal_info(personal_info),
         )
         logger.info("Analysis completed")
+
+        # 在context中添加职位名称
+        context = {
+            "position_name": position_name,
+            "jd": jd_analysis,
+            "personal": personal_analysis
+        }
 
         # 构建联系方式
         contact = "\n".join(
@@ -192,9 +198,10 @@ async def generate_resume(personal_info: str, job_description: str) -> str:
         )
         logger.info("All sections generated")
 
-        # 组装简历，移除education部分
+        # 组装简历，包含position_name
         resume_md = RESUME_STRUCTURE.format(
             name=personal_analysis["basic"]["name"],
+            position_name=position_name,  # 添加职位名称
             contact=contact,
             summary=sections[0],
             skills=sections[1],
@@ -237,7 +244,7 @@ async def modify_resume_section(
                 {"role": "user", "content": prompt},
             ],
             temperature=0.7,
-            max_tokens=2000,
+            max_tokens=4096,
             presence_penalty=0.6,
             frequency_penalty=0.3,
         )

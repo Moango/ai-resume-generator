@@ -1,5 +1,6 @@
 # 简化的简历结构，移除教育背景部分
 RESUME_STRUCTURE = """# {name}
+目标职位：{position_name}
 
 ## 联系方式
 {contact}
@@ -10,17 +11,27 @@ RESUME_STRUCTURE = """# {name}
 ## 技能特长
 {skills}
 
-## 工作经验
+## 工作经历
+{work_history}
+
+## 项目经历
 {work_experience}"""
 
-# 简化的工作经验模板
+# 简化的项目经历模板
 WORK_EXPERIENCE_TEMPLATE = """### {company} ({period})
 #### {position}
 **{project}**
-- 背景：{background}
-- 方案：{solution}
-- 职责：{duties}
-- 成果：{results}"""
+- 项目背景：{background}
+- 技术方案：{solution}
+- 主要职责：{duties}
+- 项目成果：{results}"""
+
+# 新增工作经历模板
+WORK_HISTORY_TEMPLATE = """### {position} · {company} · {location}
+{period}
+{summary}
+
+{highlights}"""
 
 GENERATION_REQUIREMENTS = """
 分析要求：
@@ -29,7 +40,7 @@ GENERATION_REQUIREMENTS = """
    - 经验年限和领域要求
    - 职责范围和期望
 
-2. 项目经验要体现：
+2. 项目经历要体现：
    - 完整的项目周期参与
    - 核心技术难点攻克
    - 架构设计能力
