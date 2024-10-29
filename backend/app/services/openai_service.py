@@ -1,9 +1,7 @@
-from openai import OpenAI
-from dotenv import load_dotenv
-import os
 import json
 import logging
 import asyncio
+from app.core.openai_client import OpenAIClient
 from app.templates.resume.system_prompts import (
     INTERVIEWER_REVIEW_PROMPT,
     JD_ANALYSIS_PROMPT,
@@ -11,13 +9,10 @@ from app.templates.resume.system_prompts import (
     SECTION_GENERATION_PROMPTS,
     RESUME_MODIFICATION_PROMPT
 )
-from app.templates.resume.section_templates import RESUME_STRUCTURE  # 修复导入
+from app.templates.resume.section_templates import RESUME_STRUCTURE
 
 logger = logging.getLogger(__name__)
-load_dotenv()
-
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"), base_url=os.getenv("BASE_URL"))
-
+client = OpenAIClient.get_client()
 
 async def analyze_job_description(job_description: str) -> dict:
     """分析职位描述，提取关键要求"""
@@ -30,7 +25,7 @@ async def analyze_job_description(job_description: str) -> dict:
             ],
             temperature=0.7,
             max_tokens=4096,
-            response_format={"type": "json_object"},  # 指定返回JSON格式
+            response_format={"type": "json_object"}
         )
 
         response_content = completion.choices[0].message.content.strip()

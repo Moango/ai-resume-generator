@@ -1,4 +1,4 @@
-# 简化的简历结构，移除教育背景部分
+# 修改RESUME_STRUCTURE,添加工作经历部分
 RESUME_STRUCTURE = """# {name}
 目标职位：{position_name}
 
@@ -16,15 +16,6 @@ RESUME_STRUCTURE = """# {name}
 
 ## 项目经验
 {work_experience}"""
-
-# 简化的工作经验模板
-WORK_EXPERIENCE_TEMPLATE = """### {company} ({period})
-#### {position}
-**{project}**
-- 背景：{background}
-- 方案：{solution}
-- 职责：{duties}
-- 成果：{results}"""
 
 # 添加工作经历模板
 WORK_HISTORY_TEMPLATE = """### {position} · {company} · {location}
