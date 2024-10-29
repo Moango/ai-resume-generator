@@ -5,6 +5,7 @@ import json
 import logging
 import asyncio
 from app.templates.resume.system_prompts import (
+    INTERVIEWER_REVIEW_PROMPT,
     JD_ANALYSIS_PROMPT,
     PERSONAL_INFO_ANALYSIS_PROMPT,
     SECTION_GENERATION_PROMPTS,
@@ -134,6 +135,33 @@ async def generate_section(
 - 突出个人贡献和角色
 - 体现技术深度和广度
 - 强调解决问题的能力""",
+            "work_history": """
+要求：
+1. 工作经历格式：
+   - 职位·公司·地点
+   - 工作时间段
+   - 工作概述
+   - 关键成就要点
+
+2. 内容要求：
+   - 以动词开头描述成就
+   - 使用具体的量化指标
+   - 突出核心贡献
+   - 体现技术深度
+   - 强调业务价值
+
+3. 要点描述：
+   - 简洁有力
+   - 可引发讨论
+   - 有技术亮点
+   - 有业务价值
+   - 可量化成果
+
+注意：
+- 按时间倒序排列
+- 突出与目标职位相关的经历
+- 避免过多技术细节
+- 保持专业性和可信度""",
         }
 
         prompt = f"""基于以下背景生成{section}部分：
@@ -173,7 +201,7 @@ async def generate_resume(personal_info: str, job_description: str, position_nam
         )
         logger.info("Analysis completed")
 
-        # 在context中添加职位名称
+        # 在context中添加职位名
         context = {
             "position_name": position_name,
             "jd": jd_analysis,
@@ -193,19 +221,20 @@ async def generate_resume(personal_info: str, job_description: str, position_nam
         sections = await asyncio.gather(
             *[
                 generate_section(section, jd_analysis, personal_analysis)
-                for section in ["summary", "skills", "experience"]
+                for section in ["summary", "skills", "work_history", "experience"]
             ]
         )
         logger.info("All sections generated")
 
-        # 组装简历，包含position_name
+        # 组装简历时添加work_history
         resume_md = RESUME_STRUCTURE.format(
             name=personal_analysis["basic"]["name"],
-            position_name=position_name,  # 添加职位名称
+            position_name=position_name,
             contact=contact,
             summary=sections[0],
             skills=sections[1],
-            work_experience=sections[2],
+            work_history=sections[2],
+            work_experience=sections[3],
         )
 
         return resume_md
@@ -255,3 +284,94 @@ async def modify_resume_section(
     except Exception as e:
         logger.error(f"Error modifying resume: {str(e)}")
         raise ValueError(f"修改简历时发生错误: {str(e)}")
+
+
+async def review_section(section_name: str, content: str) -> str:
+    """从面试官视角审查简历内容"""
+    try:
+        prompt = f"""请审查以下简历{section_name}部分的内容：
+
+{content}
+
+请从面试官视角给出详细的审查意见。"""
+
+        completion = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": INTERVIEWER_REVIEW_PROMPT},
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0.7,
+            max_tokens=2048,
+        )
+
+        return completion.choices[0].message.content.strip()
+    except Exception as e:
+        logger.error(f"Error reviewing {section_name}: {str(e)}")
+        raise ValueError(f"审查{section_name}失败: {str(e)}")
+
+
+async def review_and_improve_section(section_name: str, content: str, jd_analysis: dict, personal_analysis: dict) -> dict:
+    """从面试官视角审查简历内容并生成改进版本"""
+    try:
+        # 1. 先获取面试官的审查意见
+        review_prompt = f"""请审查以下简历{section_name}部分的内容：
+
+{content}
+
+请从面试官视角给出详细的审查意见。"""
+
+        review_completion = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": INTERVIEWER_REVIEW_PROMPT},
+                {"role": "user", "content": review_prompt},
+            ],
+            temperature=0.7,
+            max_tokens=2048,
+        )
+        
+        review_feedback = review_completion.choices[0].message.content.strip()
+        
+        # 2. 基于审查意见生成改进版本
+        improve_prompt = f"""基于以下面试官的审查意见，改进简历内容：
+
+原始内容：
+{content}
+
+面试官审查意见：
+{review_feedback}
+
+请生成改进后的内容，要求：
+1. 解决审查意见中指出的所有问题
+2. 保持原有的优点
+3. 确保所有数据和描述真实可信
+4. 加强技术深度和业务价值的展示
+5. 提供更具体的项目和技术细节
+6. 使用更专业的描述方式
+
+背景信息：
+{json.dumps({"jd": jd_analysis, "personal": personal_analysis}, ensure_ascii=False, indent=2)}
+"""
+
+        improve_completion = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": SECTION_GENERATION_PROMPTS[section_name]},
+                {"role": "user", "content": improve_prompt},
+            ],
+            temperature=0.7,
+            max_tokens=2048,
+        )
+        
+        improved_content = improve_completion.choices[0].message.content.strip()
+        
+        return {
+            "original": content,
+            "review": review_feedback,
+            "improved": improved_content
+        }
+        
+    except Exception as e:
+        logger.error(f"Error reviewing and improving {section_name}: {str(e)}")
+        raise ValueError(f"审查并改进{section_name}失败: {str(e)}")
