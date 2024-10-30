@@ -1,6 +1,4 @@
-from openai import OpenAI
-from dotenv import load_dotenv
-import os
+from app.core.openai_client import OpenAIClient
 import json
 import logging
 import asyncio
@@ -9,14 +7,14 @@ from app.templates.resume.system_prompts import (
     JD_ANALYSIS_PROMPT,
     PERSONAL_INFO_ANALYSIS_PROMPT,
     SECTION_GENERATION_PROMPTS,
-    RESUME_MODIFICATION_PROMPT
+    RESUME_MODIFICATION_PROMPT,
 )
-from app.templates.resume.section_templates import RESUME_STRUCTURE  # 修复导入
+from app.templates.resume.section_templates import RESUME_STRUCTURE
+from app.templates.resume.section_requirements import SECTION_REQUIREMENTS
 
 logger = logging.getLogger(__name__)
-load_dotenv()
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"), base_url=os.getenv("BASE_URL"))
+client = OpenAIClient.get_client()
 
 
 async def analyze_job_description(job_description: str) -> dict:
@@ -80,100 +78,18 @@ async def generate_section(
     try:
         context = {"jd": jd_analysis, "personal": personal_analysis}
 
-        section_requirements = {
-            "summary": """
-要求：
-1. 开头点明具体的业务领域和年限
-2. 描述2-3个最有说服力的项目成果
-3. 说明在特定技术领域的专长和深度
-4. 结尾要体现对目标职位的理解和规划
+        prompt = f"""
+                    基于以下背景生成{section}部分：
+                    {json.dumps(context, ensure_ascii=False, indent=2)}
 
-注意：
-- 避免使用"精通"、"专家"等主观词
-- 性能优化必须有完整上下文
-- 突出行业经验和业务理解
-- 保持简洁专业，避免套话""",
-            "skills": """
-要求：
-1. 技术栈分类：
-   - 后端：框架、中间件、数据库
-   - 前端：框架、构建工具、UI库
-   - DevOps：容器、CI/CD、监控
-   - 云服务：具体平台和产品
-   
-2. 技能描述：
-   - 结合具体项目场景
-   - 说明解决的业务问题
-   - 提供性能和可用性数据
+                    {SECTION_REQUIREMENTS.get(section, '')}
 
-3. 技能评级：
-   - 避免使用主观评
-   - 用项目经验说明熟练程度
-   - 强调解决复杂问题的能力
-   - 突出技术深度和广度""",
-            "experience": """
-要求：
-1. 项目背景：
-   - 业务场景和价值
-   - 团队规模和角色
-   - 项目难点和挑战
-
-2. 技术实现：
-   - 架构设计和考虑
-   - 核心功能实现
-   - 性能优化方案
-   - 运维和监控方案
-
-3. 项目成果：
-   - 具体的业务指标
-   - 完整的性能数据
-   - 可量化的改进
-   - 团队贡献和影响
-
-注意：
-- 所有数据必须有具体场景
-- 突出个人贡献和角色
-- 体现技术深度和广度
-- 强调解决问题的能力""",
-            "work_history": """
-要求：
-1. 工作经历格式：
-   - 职位·公司·地点
-   - 工作时间段
-   - 工作概述
-   - 关键成就要点
-
-2. 内容要求：
-   - 以动词开头描述成就
-   - 使用具体的量化指标
-   - 突出核心贡献
-   - 体现技术深度
-   - 强调业务价值
-
-3. 要点描述：
-   - 简洁有力
-   - 可引发讨论
-   - 有技术亮点
-   - 有业务价值
-   - 可量化成果
-
-注意：
-- 按时间倒序排列
-- 突出与目标职位相关的经历
-- 避免过多技术细节
-- 保持专业性和可信度""",
-        }
-
-        prompt = f"""基于以下背景生成{section}部分：
-{json.dumps(context, ensure_ascii=False, indent=2)}
-
-{section_requirements.get(section, '')}
-
-特别注意：
-1. 内容必须真实可信
-2. 避免模板化表述
-3. 突出个人特色
-4. 与职位高度相关"""
+                    特别注意：
+                    1. 内容必须真实可信
+                    2. 避免模板化表述
+                    3. 突出个人特色
+                    4. 与职位高度相关
+                """
 
         completion = client.chat.completions.create(
             model="gpt-3.5-turbo",
@@ -191,7 +107,9 @@ async def generate_section(
         raise ValueError(f"生成{section}失败: {str(e)}")
 
 
-async def generate_resume(personal_info: str, job_description: str, position_name: str) -> str:
+async def generate_resume(
+    personal_info: str, job_description: str, position_name: str
+) -> str:
     """分步骤生成简历"""
     try:
         # 并行执行分析任务
@@ -205,7 +123,7 @@ async def generate_resume(personal_info: str, job_description: str, position_nam
         context = {
             "position_name": position_name,
             "jd": jd_analysis,
-            "personal": personal_analysis
+            "personal": personal_analysis,
         }
 
         # 构建联系方式
@@ -311,7 +229,9 @@ async def review_section(section_name: str, content: str) -> str:
         raise ValueError(f"审查{section_name}失败: {str(e)}")
 
 
-async def review_and_improve_section(section_name: str, content: str, jd_analysis: dict, personal_analysis: dict) -> dict:
+async def review_and_improve_section(
+    section_name: str, content: str, jd_analysis: dict, personal_analysis: dict
+) -> dict:
     """从面试官视角审查简历内容并生成改进版本"""
     try:
         # 1. 先获取面试官的审查意见
@@ -330,9 +250,9 @@ async def review_and_improve_section(section_name: str, content: str, jd_analysi
             temperature=0.7,
             max_tokens=2048,
         )
-        
+
         review_feedback = review_completion.choices[0].message.content.strip()
-        
+
         # 2. 基于审查意见生成改进版本
         improve_prompt = f"""基于以下面试官的审查意见，改进简历内容：
 
@@ -363,15 +283,15 @@ async def review_and_improve_section(section_name: str, content: str, jd_analysi
             temperature=0.7,
             max_tokens=2048,
         )
-        
+
         improved_content = improve_completion.choices[0].message.content.strip()
-        
+
         return {
             "original": content,
             "review": review_feedback,
-            "improved": improved_content
+            "improved": improved_content,
         }
-        
+
     except Exception as e:
         logger.error(f"Error reviewing and improving {section_name}: {str(e)}")
         raise ValueError(f"审查并改进{section_name}失败: {str(e)}")
