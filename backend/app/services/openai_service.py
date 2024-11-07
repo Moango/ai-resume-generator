@@ -17,14 +17,23 @@ logger = logging.getLogger(__name__)
 client = OpenAIClient.get_client()
 
 
-async def analyze_job_description(job_description: str) -> dict:
-    """分析职位描述，提取关键要求"""
+async def analyze_job_description(jd: str) -> dict:
+    """深入分析职位需求"""
     try:
+        prompt = f"""请深入分析这份JD，提取以下信息：
+1. 核心技能要求
+2. 关键项目经验期望
+3. 加分项和隐含要求
+4. 招聘方真正看重的能力
+5. 区分必要条件和优先条件
+
+JD内容：{jd}
+"""
         completion = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": JD_ANALYSIS_PROMPT},
-                {"role": "user", "content": job_description},
+                {"role": "user", "content": prompt},
             ],
             temperature=0.7,
             max_tokens=4096,
@@ -44,14 +53,23 @@ async def analyze_job_description(job_description: str) -> dict:
         raise ValueError(f"职位分析失败: {str(e)}")
 
 
-async def analyze_personal_info(personal_info: str) -> dict:
-    """分析个人信息，提取关键特点"""
+async def analyze_personal_info(info: str) -> dict:
+    """分析个人信息并挖掘潜力"""
     try:
+        prompt = f"""请分析这份个人信息，并进行合理延伸：
+1. 已具备的核心能力
+2. 可以合理延伸的相关经验
+3. 潜在的技术能力和项目经验
+4. 可以突出的竞争优势
+5. 需要重点包装的方向
+
+个人信息：{info}
+"""
         completion = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": PERSONAL_INFO_ANALYSIS_PROMPT},
-                {"role": "user", "content": personal_info},
+                {"role": "user", "content": prompt},
             ],
             temperature=0.7,
             max_tokens=4096,

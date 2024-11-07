@@ -1,0 +1,43 @@
+name: ai-resume-generator
+services:
+  backend:
+    build:
+      context: ../backend
+      dockerfile: ../docker/services/backend/Dockerfile
+    container_name: resume_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../backend:/app
+      - ./.env:/app/.env
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - BASE_URL=${BASE_URL}
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    networks:
+      - resume_network
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: ../docker/services/frontend/Dockerfile
+    container_name: resume_frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../frontend:/app
+      - /app/node_modules
+    environment:
+      - REACT_APP_API_URL=http://backend:8000
+    depends_on:
+      - backend
+    command: npm start
+    networks:
+      - resume_network
+
+networks:
+  resume_network:
+    driver: bridge
+
+volumes:
+  node_modules:

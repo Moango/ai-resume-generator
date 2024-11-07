@@ -16,7 +16,6 @@
 
 3. 用户界面
    - 响应式设计，支持移动端和桌面端
-   - 支持暗色模式
    - 优雅的加载状态和错误处理
 
 ## 技术栈
@@ -40,8 +39,7 @@
      - 使用 React Hooks 进行状态管理
      - 使用 Tailwind CSS 实现响应式设计
      - 支持优雅的加载状态和错误处理
-     - 实现了磨砂玻璃效果和渐变背景
-     - 支持暗色模式
+
 
 2. 后端 (FastAPI)
     - 主要模块：
@@ -54,26 +52,19 @@
    - API端点：
      - POST /api/v1/generate_resume：接收用户输入，返回生成的简历
    - 特性：
-     - 完整的错误处理和日志记录
-     - 请求验证和响应模型
      - 异步处理支持
 
-3. OpenAI集成
-   - 创建专门的服务来处理与OpenAI API的通信
-   - 实现提示工程，将用户输入转化为适合OpenAI API的格式
-   - 处理API响应并确保输出格式正确
 
 ## 已完成的功能
 1. ✅ 基础项目结构搭建
 2. ✅ 前端界面设计和实现
 3. ✅ 后端API开发
 4. ✅ OpenAI集成
-5. ✅ 响应式设计
 
 ## 下一步计划
 1. 添加更多的简历模板
 2. 实现简历导出功能（PDF、Word格式）
-3. 优化OpenAI提示工程
+3. 优化OpenAI提示工程（优先级最高）
 4. 部署到生产环境
 5. 保存或编辑生成的简历
 
@@ -82,11 +73,12 @@
 - 前端界面设计需要优化，目前较为简陋。
 
 ## 注意事项
-- 由于使用OpenAI API，需要考虑API调用的成本和限制
-- 确保用户了解他们的输入将被发送到第三方服务（OpenAI）进行处理
-- 建议在使用前设置适当的环境变量（OPENAI_API_KEY）
+- 由于使用OpenAI API，注意API调用的成本
+- 在使用前配置env文件
 
 ## 本地开发
+
+### 方式一：直接运行
 1. 克隆项目
 2. 前端设置：   
 ```bash
@@ -99,27 +91,55 @@
    cd backend
    pip install -r requirements.txt
    uvicorn app.main:app --reload   
-   ```
+```
 4. 设置环境变量：
    - 创建 `.env` 文件
    - 添加 `OPENAI_API_KEY=your_api_key`
 
+### 方式二：使用 Docker Compose
+1. 确保已安装 Docker 和 Docker Compose
+2. 配置环境变量：
+   ```bash
+   # 复制环境变量模板
+   cp docker/.env.example docker/.env
+   
+   # 编辑环境变量
+   vim docker/.env
+   ```
+3. 启动服务：
+   ```bash
+   # 进入docker目录
+   cd docker
+  
+   # 后台运行
+   docker-compose -f docker-compose.yml up -d
+   ```
+4. 访问服务：
+   - 前端：http://localhost:3000
+   - 后端：http://localhost:8000/docs
+
+
+## 项目结构
+```
+.
+├── backend/                # 后端代码
+├── frontend/              # 前端代码
+├── docker/                # Docker 相关配置
+│   ├── docker-compose.yml # 服务编排配置
+│   ├── .env.example      # 环境变量模板
+│   └── services/         # 服务配置
+│       ├── backend/      # 后端服务配置
+│       └── frontend/     # 前端服务配置
+└── docs/                  # 项目文档
+```
 
 ## 项目进度更新
 
 ### 最新更新 (当前日期)
 - ✅ 优化代码结构
-  - 将简历部分要求配置移至独立文件
-  - 提高代码可维护性
   - 统一配置管理方式
-
-### 最新更新 (2024-10-28)
-- ✅ 增强面试官视角审查功能
-  - 实现自动内容改进
-  - 完善审查反馈流程
-  - 优化生成策略
-  - 实现面试官视角内容审查
-  - 优化内容生成质量
+- ✅ 添加Docker容器化支持
+- ✅ 优化个人简介生成策略（初版）
 
 ### 下一步计划
 1. 优化改进算法
@@ -129,3 +149,7 @@
 
 ### 更新历史
 请查看 [CHANGELOG.md](./CHANGELOG.md) 获取完整的更新历史。
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=Moango/ai-resume-generator&type=Date)](https://star-history.com/#Moango/ai-resume-generator&Date)

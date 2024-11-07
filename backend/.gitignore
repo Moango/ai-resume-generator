@@ -26,3 +26,6 @@ ENV/
 .pytest_cache/
 .coverage
 htmlcov/
+
+# Test Data
+scripts/test_data/
